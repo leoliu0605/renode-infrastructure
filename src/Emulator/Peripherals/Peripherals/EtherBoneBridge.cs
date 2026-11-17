@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010-2019 Antmicro
+// Copyright (c) 2010-2026 Antmicro
 //
 // This file is licensed under the MIT License.
 // Full license text is available in 'licenses/MIT.txt'.
@@ -9,6 +9,7 @@ using System.IO;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 
+using Antmicro.Renode.Core;
 using Antmicro.Renode.Exceptions;
 using Antmicro.Renode.Logging;
 using Antmicro.Renode.Peripherals.Bus;
@@ -19,8 +20,9 @@ namespace Antmicro.Renode.Peripherals
     [AllowedTranslations(AllowedTranslation.ByteToDoubleWord | AllowedTranslation.WordToDoubleWord)]
     public class EtherBoneBridge : IDoubleWordPeripheral, IDisposable, IAbsoluteAddressAware
     {
-        public EtherBoneBridge(int port, string host = "127.0.0.1")
+        public EtherBoneBridge(IMachine machine, int port, string host = "127.0.0.1")
         {
+            sysbus = machine.GetSystemBus(this);
             try
             {
                 connection = new TcpClient(host, port);
@@ -50,14 +52,9 @@ namespace Antmicro.Renode.Peripherals
             connection.Close();
         }
 
-        public void SetAbsoluteAddress(ulong address)
-        {
-            absoluteAddress = address;
-        }
-
         public uint ReadDoubleWord(long offset)
         {
-            if(!TryRead((uint)absoluteAddress, out var result))
+            if(!TryRead((uint)CurrentAccessAddress, out var result))
             {
                 this.Log(LogLevel.Warning, "Could not read from offset 0x{0:X}. Check your connection with EtherBone server", offset);
             }
@@ -67,7 +64,7 @@ namespace Antmicro.Renode.Peripherals
 
         public void WriteDoubleWord(long offset, uint val)
         {
-            if(!TryWrite((uint)absoluteAddress, val))
+            if(!TryWrite((uint)CurrentAccessAddress, val))
             {
                 this.Log(LogLevel.Warning, "Could not write value 0x{0:X} to offset 0x{1:X}. Check your connection with EtherBone server", val, offset);
             }
@@ -172,9 +169,11 @@ namespace Antmicro.Renode.Peripherals
             Misc.SwapElements(arr, 17, 18);
         }
 
-        private ulong absoluteAddress;
+        private ulong CurrentAccessAddress => sysbus.TryGetCurrentAccessAddress(out var address) ? address : 0;
+
         private EtherBoneRecord ebRecord;
 
+        private readonly IBusController sysbus;
         private readonly NetworkStream dataStream;
         private readonly TcpClient connection;
 

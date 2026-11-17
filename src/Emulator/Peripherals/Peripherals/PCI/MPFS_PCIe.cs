@@ -24,6 +24,7 @@ namespace Antmicro.Renode.Peripherals.PCI
     {
         public MPFS_PCIe(IMachine machine) : base(machine)
         {
+            sysbus = machine.GetSystemBus(this);
             var registersDictionary = new Dictionary<long, DoubleWordRegister>
             {
                 //this register is not documented. It seems it contains the enabled flag, it may contain the port type, number of lanes, lane rate etc
@@ -168,14 +169,14 @@ namespace Antmicro.Renode.Peripherals.PCI
         [ConnectionRegion("ecam")]
         public void WriteDoubleWordEcam(long offset, uint value)
         {
-            var table = axiAddressTables.SingleOrDefault(x => x.DoesAddressHit(currentAccessAbsoluteAddress));
+            var table = axiAddressTables.SingleOrDefault(x => x.DoesAddressHit(CurrentAccessAddress));
             if(table == null)
             {
-                this.Log(LogLevel.Warning, "Trying to access memory at 0x{0:X} writing 0x{1:X} without address translation configured.", currentAccessAbsoluteAddress, value);
+                this.Log(LogLevel.Warning, "Trying to access memory at 0x{0:X} writing 0x{1:X} without address translation configured.", CurrentAccessAddress, value);
                 this.LogUnhandledWrite(offset, value);
                 return;
             }
-            var translatedAddress = table.Translate(currentAccessAbsoluteAddress);
+            var translatedAddress = table.Translate(CurrentAccessAddress);
             if(table.TargetSpace == PCIeSpace.Configuration)
             {
                 if(!TryDoEcamLookup(offset, out var result))
@@ -207,14 +208,14 @@ namespace Antmicro.Renode.Peripherals.PCI
         [ConnectionRegion("ecam")]
         public uint ReadDoubleWordEcam(long offset)
         {
-            var table = axiAddressTables.SingleOrDefault(x => x.DoesAddressHit(currentAccessAbsoluteAddress));
+            var table = axiAddressTables.SingleOrDefault(x => x.DoesAddressHit(CurrentAccessAddress));
             if(table == null)
             {
-                this.Log(LogLevel.Warning, "Trying to access memory at 0x{0:X} without address translation configured.", currentAccessAbsoluteAddress);
+                this.Log(LogLevel.Warning, "Trying to access memory at 0x{0:X} without address translation configured.", CurrentAccessAddress);
                 this.LogUnhandledRead(offset);
                 return 0;
             }
-            var translatedAddress = table.Translate(currentAccessAbsoluteAddress);
+            var translatedAddress = table.Translate(CurrentAccessAddress);
             if(table.TargetSpace == PCIeSpace.Configuration)
             {
                 if(!TryDoEcamLookup(offset, out var result))
@@ -246,11 +247,6 @@ namespace Antmicro.Renode.Peripherals.PCI
         public override void Reset()
         {
             registers.Reset();
-        }
-
-        public void SetAbsoluteAddress(ulong address)
-        {
-            currentAccessAbsoluteAddress = address & ~3ul;
         }
 
         public long Size => 0x4000;
@@ -304,7 +300,9 @@ namespace Antmicro.Renode.Peripherals.PCI
                         );
         }
 
-        private ulong currentAccessAbsoluteAddress;
+        private ulong CurrentAccessAddress => (sysbus.TryGetCurrentAccessAddress(out var address) ? address : 0) & ~3ul;
+
+        private readonly IBusController sysbus;
         private readonly DoubleWordRegisterCollection registers;
 
         private readonly AddressTranslationTable[] pcieAddressTables = new AddressTranslationTable[NumberOfTranslationTables];

@@ -199,7 +199,7 @@ namespace Antmicro.Renode.Peripherals.Bus
         public BusAccess.DoubleWordWriteMethod WriteDoubleWord;
         public BusAccess.QuadWordReadMethod ReadQuadWord;
         public BusAccess.QuadWordWriteMethod WriteQuadWord;
-        public Action<ulong> SetAbsoluteAddress;
+        public bool AbsoluteAddressAware;
         public IBusPeripheral Peripheral;
         public string Tag;
         public object Lock;

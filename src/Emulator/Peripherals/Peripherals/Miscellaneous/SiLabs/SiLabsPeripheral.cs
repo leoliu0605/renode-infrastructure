@@ -30,11 +30,6 @@ namespace Antmicro.Renode.Peripherals.Miscellaneous.SiLabs
             }
         }
 
-        public void SetAbsoluteAddress(ulong address)
-        {
-            currentAbsoluteAddress = address;
-        }
-
         public byte ReadByte(long offset)
         {
             int byteOffset = (int)(offset & 0x3);
@@ -104,7 +99,7 @@ namespace Antmicro.Renode.Peripherals.Miscellaneous.SiLabs
         /// </summary>
         public virtual bool Enabled { get; set; }
 
-        public bool IsSecureAccess => (currentAbsoluteAddress & 0x10000000) != 0;
+        public bool IsSecureAccess => (CurrentAccessAddress & 0x10000000) != 0;
 
         public virtual long Size => 0x4000;
 
@@ -112,7 +107,7 @@ namespace Antmicro.Renode.Peripherals.Miscellaneous.SiLabs
         {
             if(Enabled)
             {
-                this.Log(LogLevel.Error, "Write to a WSTATIC register ({0}) while peripheral is enabled; ignored on hardware", Enum.ToObject(RegistersType, currentAbsoluteAddress & 0x3FFF));
+                this.Log(LogLevel.Error, "Write to a WSTATIC register ({0}) while peripheral is enabled; ignored on hardware", Enum.ToObject(RegistersType, CurrentAccessAddress & 0x3FFF));
             }
         }
 
@@ -120,8 +115,8 @@ namespace Antmicro.Renode.Peripherals.Miscellaneous.SiLabs
         {
             if(!Enabled)
             {
-                this.Log(LogLevel.Error, "Trying to write to a WSYNC register ({0}) while peripheral is disabled", Enum.ToObject(RegistersType, currentAbsoluteAddress & 0x3FFF));
-                TriggerBusFault(currentAbsoluteAddress);
+                this.Log(LogLevel.Error, "Trying to write to a WSYNC register ({0}) while peripheral is disabled", Enum.ToObject(RegistersType, CurrentAccessAddress & 0x3FFF));
+                TriggerBusFault(CurrentAccessAddress);
             }
         }
 
@@ -129,8 +124,8 @@ namespace Antmicro.Renode.Peripherals.Miscellaneous.SiLabs
         {
             if(!Enabled)
             {
-                this.Log(LogLevel.Error, "Trying to write to a RWSYNC register ({0}) while peripheral is disabled", Enum.ToObject(RegistersType, currentAbsoluteAddress & 0x3FFF));
-                TriggerBusFault(currentAbsoluteAddress);
+                this.Log(LogLevel.Error, "Trying to write to a RWSYNC register ({0}) while peripheral is disabled", Enum.ToObject(RegistersType, CurrentAccessAddress & 0x3FFF));
+                TriggerBusFault(CurrentAccessAddress);
             }
         }
 
@@ -157,7 +152,7 @@ namespace Antmicro.Renode.Peripherals.Miscellaneous.SiLabs
             if(Cmu != null && Cmu.GetPeripheralClockEnable(this) == false)
             {
                 this.Log(LogLevel.Error, "Accessing a peripheral while peripheral clock is disabled");
-                TriggerBusFault(currentAbsoluteAddress);
+                TriggerBusFault(CurrentAccessAddress);
                 return false;
             }
             if(CurrentCpu is CortexM cortexM && cortexM.TrustZoneEnabled && Smu != null && Smu.GetPeripheralSecurityLevel(this) != IsSecureAccess)
@@ -165,7 +160,7 @@ namespace Antmicro.Renode.Peripherals.Miscellaneous.SiLabs
                 this.Log(LogLevel.Error, "Accessing a {0} peripheral while peripheral security level is {1}",
                     IsSecureAccess ? "secure" : "non-secure",
                     IsSecureAccess ? "non-secure" : "secure");
-                TriggerBusFault(currentAbsoluteAddress);
+                TriggerBusFault(CurrentAccessAddress);
                 return false;
             }
             if(!VerifyPapAccess(isWrite, offset))
@@ -296,6 +291,8 @@ namespace Antmicro.Renode.Peripherals.Miscellaneous.SiLabs
 
         protected abstract Type RegistersType { get; }
 
+        private ulong CurrentAccessAddress => machine.SystemBus.TryGetCurrentAccessAddress(out var address) ? address : 0;
+
         protected DoubleWordRegisterCollection registersCollection;
 
         protected readonly Machine machine;
@@ -306,7 +303,6 @@ namespace Antmicro.Renode.Peripherals.Miscellaneous.SiLabs
 
         private ISiLabs_SMU smu;
 
-        private ulong currentAbsoluteAddress;
         private const uint SetRegisterOffset = 0x1000;
         private const uint ClearRegisterOffset = 0x2000;
         private const uint ToggleRegisterOffset = 0x3000;

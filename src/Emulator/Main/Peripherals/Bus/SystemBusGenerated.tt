@@ -92,11 +92,10 @@ namespace Antmicro.Renode.Peripherals.Bus
                 lock(accessMethods.Lock)
                 {
                     var peripheralOffset = checked((long)((address - startAddress) + offset));
-                    if(accessMethods.SetAbsoluteAddress == null)
+                    if(!accessMethods.AbsoluteAddressAware)
                     {
                         return accessMethods.Read<#=name#>(peripheralOffset);
                     }
-                    accessMethods.SetAbsoluteAddress(address);
                     var previousAccessAddress = currentAccessAddress;
                     currentAccessAddress = address;
                     try
@@ -176,12 +175,11 @@ namespace Antmicro.Renode.Peripherals.Bus
                     var invalidationCtx = delayedInvalidation ? context as IHasDelayedInvalidationContext : null;
                     using(var ctx = invalidationCtx?.EnterDelayedInvalidationContext())
                     {
-                        if(accessMethods.SetAbsoluteAddress == null)
+                        if(!accessMethods.AbsoluteAddressAware)
                         {
                             accessMethods.Write<#=name#>(peripheralOffset, value);
                             return;
                         }
-                        accessMethods.SetAbsoluteAddress(address);
                         var previousAccessAddress = currentAccessAddress;
                         currentAccessAddress = address;
                         try

@@ -943,9 +943,8 @@ namespace Antmicro.Renode.Peripherals.Bus
                     if(target.What.Peripheral is IMultibyteWritePeripheral multibytePeripheral)
                     {
                         var previousAccessAddress = currentAccessAddress;
-                        if(target.What.Peripheral is IAbsoluteAddressAware absoluteAddressAwarePeripheral)
+                        if(target.What.Peripheral is IAbsoluteAddressAware)
                         {
-                            absoluteAddressAwarePeripheral.SetAbsoluteAddress(address);
                             currentAccessAddress = target.Offset;
                         }
                         try
@@ -1017,9 +1016,8 @@ namespace Antmicro.Renode.Peripherals.Bus
                     if(target.What.Peripheral is IMultibyteWritePeripheral multibytePeripheral)
                     {
                         var previousAccessAddress = currentAccessAddress;
-                        if(target.What.Peripheral is IAbsoluteAddressAware absoluteAddressAwarePeripheral)
+                        if(target.What.Peripheral is IAbsoluteAddressAware)
                         {
-                            absoluteAddressAwarePeripheral.SetAbsoluteAddress(address);
                             currentAccessAddress = target.Offset;
                         }
                         try
@@ -2201,12 +2199,7 @@ namespace Antmicro.Renode.Peripherals.Bus
                     }
                 }
 
-                // we also have to put missing methods
-                var absoluteAddressAware = peripheral as IAbsoluteAddressAware;
-                if(absoluteAddressAware != null)
-                {
-                    methods.SetAbsoluteAddress = absoluteAddressAware.SetAbsoluteAddress;
-                }
+                methods.AbsoluteAddressAware = peripheral is IAbsoluteAddressAware;
                 peripheralsCollectionByContext.WithStateCollection(context, stateMask, collection =>
                 {
                     // Currently the end address is actually "one past the end address".

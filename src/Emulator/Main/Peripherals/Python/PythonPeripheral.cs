@@ -89,11 +89,6 @@ namespace Antmicro.Renode.Peripherals.Python
             }
         }
 
-        public void SetAbsoluteAddress(ulong address)
-        {
-            pythonRunner.Request.Absolute = address;
-        }
-
         public byte ReadByte(long offset)
         {
             pythonRunner.Request.Length = 1;
@@ -200,6 +195,7 @@ namespace Antmicro.Renode.Peripherals.Python
             pythonRunner.Request.Value = 0;
             pythonRunner.Request.Type = PeripheralPythonEngine.PythonRequest.RequestType.READ;
             pythonRunner.Request.Offset = offset;
+            pythonRunner.Request.Absolute = GetCurrentAccessAddress();
             pythonRunner.Request.Counter = requestCounter++;
             Execute();
         }
@@ -211,6 +207,7 @@ namespace Antmicro.Renode.Peripherals.Python
             pythonRunner.Request.Value = value;
             pythonRunner.Request.Type = PeripheralPythonEngine.PythonRequest.RequestType.WRITE;
             pythonRunner.Request.Offset = offset;
+            pythonRunner.Request.Absolute = GetCurrentAccessAddress();
             pythonRunner.Request.Counter = requestCounter++;
             Execute();
         }
@@ -218,6 +215,11 @@ namespace Antmicro.Renode.Peripherals.Python
         private void Execute()
         {
             pythonRunner.ExecuteCode();
+        }
+
+        private ulong GetCurrentAccessAddress()
+        {
+            return this.TryGetMachine(out var machine) && machine.SystemBus.TryGetCurrentAccessAddress(out var address) ? address : 0;
         }
 
         private bool inited;
