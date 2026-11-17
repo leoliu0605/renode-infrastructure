@@ -91,11 +91,22 @@ namespace Antmicro.Renode.Peripherals.Bus
                 }
                 lock(accessMethods.Lock)
                 {
-                    if(accessMethods.SetAbsoluteAddress != null)
+                    var peripheralOffset = checked((long)((address - startAddress) + offset));
+                    if(accessMethods.SetAbsoluteAddress == null)
                     {
-                        accessMethods.SetAbsoluteAddress(address);
+                        return accessMethods.Read<#=name#>(peripheralOffset);
                     }
-                    return accessMethods.Read<#=name#>(checked((long)((address - startAddress) + offset)));
+                    accessMethods.SetAbsoluteAddress(address);
+                    var previousAccessAddress = currentAccessAddress;
+                    currentAccessAddress = address;
+                    try
+                    {
+                        return accessMethods.Read<#=name#>(peripheralOffset);
+                    }
+                    finally
+                    {
+                        currentAccessAddress = previousAccessAddress;
+                    }
                 }
             }
         }
@@ -161,14 +172,26 @@ namespace Antmicro.Renode.Peripherals.Bus
 
                 lock(accessMethods.Lock)
                 {
-                    if(accessMethods.SetAbsoluteAddress != null)
-                    {
-                        accessMethods.SetAbsoluteAddress(address);
-                    }
+                    var peripheralOffset = checked((long)((address - startAddress) + offset));
                     var invalidationCtx = delayedInvalidation ? context as IHasDelayedInvalidationContext : null;
                     using(var ctx = invalidationCtx?.EnterDelayedInvalidationContext())
                     {
-                        accessMethods.Write<#=name#>(checked((long)((address - startAddress) + offset)), value);
+                        if(accessMethods.SetAbsoluteAddress == null)
+                        {
+                            accessMethods.Write<#=name#>(peripheralOffset, value);
+                            return;
+                        }
+                        accessMethods.SetAbsoluteAddress(address);
+                        var previousAccessAddress = currentAccessAddress;
+                        currentAccessAddress = address;
+                        try
+                        {
+                            accessMethods.Write<#=name#>(peripheralOffset, value);
+                        }
+                        finally
+                        {
+                            currentAccessAddress = previousAccessAddress;
+                        }
                     }
                 }
             }

@@ -106,6 +106,8 @@ namespace Antmicro.Renode.Peripherals.Bus
 
         bool TryGetTransactionInitiator(out IPeripheral initiator);
 
+        bool TryGetCurrentAccessAddress(out ulong address);
+
         void UnregisterFromAddress(ulong address, ICPU context = null);
 
         void MoveRegistrationWithinContext(IBusPeripheral peripheral, BusRangeRegistration newRegistration, ICPU context, Func<IEnumerable<IBusRegistered<IBusPeripheral>>, IBusRegistered<IBusPeripheral>> selector = null);

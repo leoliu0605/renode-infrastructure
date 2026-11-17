@@ -67,11 +67,22 @@ namespace Antmicro.Renode.Peripherals.Bus
                 }
                 lock(accessMethods.Lock)
                 {
-                    if(accessMethods.SetAbsoluteAddress != null)
+                    var peripheralOffset = checked((long)((address - startAddress) + offset));
+                    if(accessMethods.SetAbsoluteAddress == null)
                     {
-                        accessMethods.SetAbsoluteAddress(address);
+                        return accessMethods.ReadByte(peripheralOffset);
                     }
-                    return accessMethods.ReadByte(checked((long)((address - startAddress) + offset)));
+                    accessMethods.SetAbsoluteAddress(address);
+                    var previousAccessAddress = currentAccessAddress;
+                    currentAccessAddress = address;
+                    try
+                    {
+                        return accessMethods.ReadByte(peripheralOffset);
+                    }
+                    finally
+                    {
+                        currentAccessAddress = previousAccessAddress;
+                    }
                 }
             }
         }
@@ -137,14 +148,26 @@ namespace Antmicro.Renode.Peripherals.Bus
 
                 lock(accessMethods.Lock)
                 {
-                    if(accessMethods.SetAbsoluteAddress != null)
-                    {
-                        accessMethods.SetAbsoluteAddress(address);
-                    }
+                    var peripheralOffset = checked((long)((address - startAddress) + offset));
                     var invalidationCtx = delayedInvalidation ? context as IHasDelayedInvalidationContext : null;
                     using(var ctx = invalidationCtx?.EnterDelayedInvalidationContext())
                     {
-                        accessMethods.WriteByte(checked((long)((address - startAddress) + offset)), value);
+                        if(accessMethods.SetAbsoluteAddress == null)
+                        {
+                            accessMethods.WriteByte(peripheralOffset, value);
+                            return;
+                        }
+                        accessMethods.SetAbsoluteAddress(address);
+                        var previousAccessAddress = currentAccessAddress;
+                        currentAccessAddress = address;
+                        try
+                        {
+                            accessMethods.WriteByte(peripheralOffset, value);
+                        }
+                        finally
+                        {
+                            currentAccessAddress = previousAccessAddress;
+                        }
                     }
                 }
             }
@@ -208,11 +231,22 @@ namespace Antmicro.Renode.Peripherals.Bus
                 }
                 lock(accessMethods.Lock)
                 {
-                    if(accessMethods.SetAbsoluteAddress != null)
+                    var peripheralOffset = checked((long)((address - startAddress) + offset));
+                    if(accessMethods.SetAbsoluteAddress == null)
                     {
-                        accessMethods.SetAbsoluteAddress(address);
+                        return accessMethods.ReadWord(peripheralOffset);
                     }
-                    return accessMethods.ReadWord(checked((long)((address - startAddress) + offset)));
+                    accessMethods.SetAbsoluteAddress(address);
+                    var previousAccessAddress = currentAccessAddress;
+                    currentAccessAddress = address;
+                    try
+                    {
+                        return accessMethods.ReadWord(peripheralOffset);
+                    }
+                    finally
+                    {
+                        currentAccessAddress = previousAccessAddress;
+                    }
                 }
             }
         }
@@ -278,14 +312,26 @@ namespace Antmicro.Renode.Peripherals.Bus
 
                 lock(accessMethods.Lock)
                 {
-                    if(accessMethods.SetAbsoluteAddress != null)
-                    {
-                        accessMethods.SetAbsoluteAddress(address);
-                    }
+                    var peripheralOffset = checked((long)((address - startAddress) + offset));
                     var invalidationCtx = delayedInvalidation ? context as IHasDelayedInvalidationContext : null;
                     using(var ctx = invalidationCtx?.EnterDelayedInvalidationContext())
                     {
-                        accessMethods.WriteWord(checked((long)((address - startAddress) + offset)), value);
+                        if(accessMethods.SetAbsoluteAddress == null)
+                        {
+                            accessMethods.WriteWord(peripheralOffset, value);
+                            return;
+                        }
+                        accessMethods.SetAbsoluteAddress(address);
+                        var previousAccessAddress = currentAccessAddress;
+                        currentAccessAddress = address;
+                        try
+                        {
+                            accessMethods.WriteWord(peripheralOffset, value);
+                        }
+                        finally
+                        {
+                            currentAccessAddress = previousAccessAddress;
+                        }
                     }
                 }
             }
@@ -349,11 +395,22 @@ namespace Antmicro.Renode.Peripherals.Bus
                 }
                 lock(accessMethods.Lock)
                 {
-                    if(accessMethods.SetAbsoluteAddress != null)
+                    var peripheralOffset = checked((long)((address - startAddress) + offset));
+                    if(accessMethods.SetAbsoluteAddress == null)
                     {
-                        accessMethods.SetAbsoluteAddress(address);
+                        return accessMethods.ReadDoubleWord(peripheralOffset);
                     }
-                    return accessMethods.ReadDoubleWord(checked((long)((address - startAddress) + offset)));
+                    accessMethods.SetAbsoluteAddress(address);
+                    var previousAccessAddress = currentAccessAddress;
+                    currentAccessAddress = address;
+                    try
+                    {
+                        return accessMethods.ReadDoubleWord(peripheralOffset);
+                    }
+                    finally
+                    {
+                        currentAccessAddress = previousAccessAddress;
+                    }
                 }
             }
         }
@@ -419,14 +476,26 @@ namespace Antmicro.Renode.Peripherals.Bus
 
                 lock(accessMethods.Lock)
                 {
-                    if(accessMethods.SetAbsoluteAddress != null)
-                    {
-                        accessMethods.SetAbsoluteAddress(address);
-                    }
+                    var peripheralOffset = checked((long)((address - startAddress) + offset));
                     var invalidationCtx = delayedInvalidation ? context as IHasDelayedInvalidationContext : null;
                     using(var ctx = invalidationCtx?.EnterDelayedInvalidationContext())
                     {
-                        accessMethods.WriteDoubleWord(checked((long)((address - startAddress) + offset)), value);
+                        if(accessMethods.SetAbsoluteAddress == null)
+                        {
+                            accessMethods.WriteDoubleWord(peripheralOffset, value);
+                            return;
+                        }
+                        accessMethods.SetAbsoluteAddress(address);
+                        var previousAccessAddress = currentAccessAddress;
+                        currentAccessAddress = address;
+                        try
+                        {
+                            accessMethods.WriteDoubleWord(peripheralOffset, value);
+                        }
+                        finally
+                        {
+                            currentAccessAddress = previousAccessAddress;
+                        }
                     }
                 }
             }
@@ -490,11 +559,22 @@ namespace Antmicro.Renode.Peripherals.Bus
                 }
                 lock(accessMethods.Lock)
                 {
-                    if(accessMethods.SetAbsoluteAddress != null)
+                    var peripheralOffset = checked((long)((address - startAddress) + offset));
+                    if(accessMethods.SetAbsoluteAddress == null)
                     {
-                        accessMethods.SetAbsoluteAddress(address);
+                        return accessMethods.ReadQuadWord(peripheralOffset);
                     }
-                    return accessMethods.ReadQuadWord(checked((long)((address - startAddress) + offset)));
+                    accessMethods.SetAbsoluteAddress(address);
+                    var previousAccessAddress = currentAccessAddress;
+                    currentAccessAddress = address;
+                    try
+                    {
+                        return accessMethods.ReadQuadWord(peripheralOffset);
+                    }
+                    finally
+                    {
+                        currentAccessAddress = previousAccessAddress;
+                    }
                 }
             }
         }
@@ -560,14 +640,26 @@ namespace Antmicro.Renode.Peripherals.Bus
 
                 lock(accessMethods.Lock)
                 {
-                    if(accessMethods.SetAbsoluteAddress != null)
-                    {
-                        accessMethods.SetAbsoluteAddress(address);
-                    }
+                    var peripheralOffset = checked((long)((address - startAddress) + offset));
                     var invalidationCtx = delayedInvalidation ? context as IHasDelayedInvalidationContext : null;
                     using(var ctx = invalidationCtx?.EnterDelayedInvalidationContext())
                     {
-                        accessMethods.WriteQuadWord(checked((long)((address - startAddress) + offset)), value);
+                        if(accessMethods.SetAbsoluteAddress == null)
+                        {
+                            accessMethods.WriteQuadWord(peripheralOffset, value);
+                            return;
+                        }
+                        accessMethods.SetAbsoluteAddress(address);
+                        var previousAccessAddress = currentAccessAddress;
+                        currentAccessAddress = address;
+                        try
+                        {
+                            accessMethods.WriteQuadWord(peripheralOffset, value);
+                        }
+                        finally
+                        {
+                            currentAccessAddress = previousAccessAddress;
+                        }
                     }
                 }
             }

@@ -259,6 +259,11 @@ namespace Antmicro.Renode.Peripherals.Bus
             return ParentController.TryGetTransactionInitiator(out initiator);
         }
 
+        public bool TryGetCurrentAccessAddress(out ulong address)
+        {
+            return ParentController.TryGetCurrentAccessAddress(out address);
+        }
+
         public virtual ICPU GetCurrentCPU()
         {
             return ParentController.GetCurrentCPU();

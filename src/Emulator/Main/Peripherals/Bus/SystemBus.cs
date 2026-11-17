@@ -877,6 +877,13 @@ namespace Antmicro.Renode.Peripherals.Bus
             return false;
         }
 
+        public bool TryGetCurrentAccessAddress(out ulong address)
+        {
+            var current = currentAccessAddress;
+            address = current.GetValueOrDefault();
+            return current.HasValue;
+        }
+
         public bool TryConvertStateToUlongForContext(IPeripheral context, IContextState cpuStateObj, out ulong? state)
         {
             state = null;
@@ -935,19 +942,27 @@ namespace Antmicro.Renode.Peripherals.Bus
                 {
                     if(target.What.Peripheral is IMultibyteWritePeripheral multibytePeripheral)
                     {
+                        var previousAccessAddress = currentAccessAddress;
                         if(target.What.Peripheral is IAbsoluteAddressAware absoluteAddressAwarePeripheral)
                         {
                             absoluteAddressAwarePeripheral.SetAbsoluteAddress(address);
+                            currentAccessAddress = target.Offset;
                         }
-
-                        var invalidationCtx = delayedInvalidation ? multibytePeripheral as IHasDelayedInvalidationContext : null;
-                        using(var ctx = invalidationCtx?.EnterDelayedInvalidationContext())
+                        try
                         {
-                            checked
+                            var invalidationCtx = delayedInvalidation ? multibytePeripheral as IHasDelayedInvalidationContext : null;
+                            using(var ctx = invalidationCtx?.EnterDelayedInvalidationContext())
                             {
-                                var peripheralAddress = (long)(target.Offset - target.What.RegistrationPoint.Range.StartAddress + target.What.RegistrationPoint.Offset);
-                                multibytePeripheral.WriteBytes(peripheralAddress, bytes, startingIndex + (int)target.SourceIndex, (int)target.SourceLength);
+                                checked
+                                {
+                                    var peripheralAddress = (long)(target.Offset - target.What.RegistrationPoint.Range.StartAddress + target.What.RegistrationPoint.Offset);
+                                    multibytePeripheral.WriteBytes(peripheralAddress, bytes, startingIndex + (int)target.SourceIndex, (int)target.SourceLength);
+                                }
                             }
+                        }
+                        finally
+                        {
+                            currentAccessAddress = previousAccessAddress;
                         }
                     }
                     else
@@ -1001,16 +1016,24 @@ namespace Antmicro.Renode.Peripherals.Bus
                 {
                     if(target.What.Peripheral is IMultibyteWritePeripheral multibytePeripheral)
                     {
+                        var previousAccessAddress = currentAccessAddress;
                         if(target.What.Peripheral is IAbsoluteAddressAware absoluteAddressAwarePeripheral)
                         {
                             absoluteAddressAwarePeripheral.SetAbsoluteAddress(address);
+                            currentAccessAddress = target.Offset;
                         }
-
-                        checked
+                        try
                         {
-                            var peripheralAddress = (long)(target.Offset - target.What.RegistrationPoint.Range.StartAddress + target.What.RegistrationPoint.Offset);
-                            var buffer = multibytePeripheral.ReadBytes(peripheralAddress, (int)target.SourceLength);
-                            Array.Copy(buffer, 0, destination, startIndex + (int)target.SourceIndex, (int)target.SourceLength);
+                            checked
+                            {
+                                var peripheralAddress = (long)(target.Offset - target.What.RegistrationPoint.Range.StartAddress + target.What.RegistrationPoint.Offset);
+                                var buffer = multibytePeripheral.ReadBytes(peripheralAddress, (int)target.SourceLength);
+                                Array.Copy(buffer, 0, destination, startIndex + (int)target.SourceIndex, (int)target.SourceLength);
+                            }
+                        }
+                        finally
+                        {
+                            currentAccessAddress = previousAccessAddress;
                         }
                     }
                     else
@@ -2653,6 +2676,9 @@ namespace Antmicro.Renode.Peripherals.Bus
         private readonly Dictionary<ICPU, int> idByCpu;
         private readonly Dictionary<ulong, List<BusHookHandler>> hooksOnWrite;
         private readonly Dictionary<int, object> peripheralAccessLocks;
+
+        [ThreadStatic]
+        private static ulong? currentAccessAddress;
 
         private const string NonExistingRead = "Read{1} from non existing peripheral at 0x{0:X}.";
         private const string TagOverriddenRead = "Read{1} from overriding tag at 0x{0:X}.";
