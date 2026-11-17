@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010-2023 Antmicro
+// Copyright (c) 2010-2026 Antmicro
 //
 // This file is licensed under the MIT License.
 // Full license text is available in 'licenses/MIT.txt'.
@@ -17,7 +17,7 @@ using Range = Antmicro.Renode.Core.Range;
 namespace Antmicro.Renode.Peripherals.PCI
 {
     [AllowedTranslations(AllowedTranslation.WordToDoubleWord | AllowedTranslation.ByteToDoubleWord)]
-    public class PCIHost_Bridge : SimpleContainer<IPCIePeripheral>, IPCIeRouter, IDoubleWordPeripheral, IAbsoluteAddressAware, IKnownSize
+    public class PCIHost_Bridge : SimpleContainer<IPCIePeripheral>, IPCIeRouter, IDoubleWordPeripheral, IKnownSize
     {
         public PCIHost_Bridge(IMachine machine) : base(machine)
         {
@@ -33,12 +33,6 @@ namespace Antmicro.Renode.Peripherals.PCI
         public void WriteDoubleWord(long offset, uint value)
         {
             registers.Write(offset, value);
-        }
-
-        public void SetAbsoluteAddress(ulong address)
-        {
-            // Youngest bit denotes IO/Memory type, second one is reserved
-            currentAccessAbsoluteAddress = address & ~3ul;
         }
 
         public override void Reset()
@@ -123,7 +117,6 @@ namespace Antmicro.Renode.Peripherals.PCI
         private IValueRegisterField busNumber;
         private IPCIePeripheral selectedDevice;
 
-        private ulong currentAccessAbsoluteAddress;
         private uint address;
 
         private readonly DoubleWordRegisterCollection registers;
