@@ -598,11 +598,14 @@ namespace Antmicro.Renode.Peripherals.Miscellaneous.SiLabs
                 {(long)Registers.ReservedCalibration1, new DoubleWordRegister(this, 0x0)
                     .WithValueField(0, 32, FieldMode.Read, name: "RESERVED_24C")
                 },
+                {(long)Registers.ReservedCalibration2, new DoubleWordRegister(this, 0x0)
+                    .WithValueField(0, 32, FieldMode.Read, name: "RESERVED_250")
+                },
                 {(long)Registers.ThermistorCalibration, new DoubleWordRegister(this, 0x0)
                     .WithValueField(0, 16, FieldMode.Read, name: "RTHERM")
                     .WithReservedBits(16, 16)
                 },
-                {(long)Registers.ReservedCalibration2, new DoubleWordRegister(this, 0x0)
+                {(long)Registers.ReservedCalibration3, new DoubleWordRegister(this, 0x0)
                     .WithValueField(0, 32, FieldMode.Read, name: "RESERVED_260")
                 },
                 {(long)Registers.FenotchCalibration, new DoubleWordRegister(this, 0xFF)
@@ -720,8 +723,9 @@ namespace Antmicro.Renode.Peripherals.Miscellaneous.SiLabs
             LegacyDeviceInformation                                         = 0x1FC,
             ReservedCalibration0                                            = 0x248,
             ReservedCalibration1                                            = 0x24C,
+            ReservedCalibration2                                            = 0x250,
             ThermistorCalibration                                           = 0x25C,
-            ReservedCalibration2                                            = 0x260,
+            ReservedCalibration3                                            = 0x260,
             FenotchCalibration                                              = 0x264,
         }
     }
